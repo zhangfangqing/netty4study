@@ -18,28 +18,28 @@ package io.netty.util.concurrent;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * Default {@link SingleThreadEventExecutor} implementation which just execute all submitted task in a
- * serial fashion
+ * Default {@link SingleThreadEventExecutor} implementation which just execute
+ * all submitted task in a serial fashion
  *
  */
 final class DefaultEventExecutor extends SingleThreadEventExecutor {
 
-    DefaultEventExecutor(DefaultEventExecutorGroup parent, ThreadFactory threadFactory) {
-        super(parent, threadFactory, true);
-    }
+	DefaultEventExecutor(DefaultEventExecutorGroup parent, ThreadFactory threadFactory) {
+		super(parent, threadFactory, true);
+	}
 
-    @Override
-    protected void run() {
-        for (;;) {
-            Runnable task = takeTask();
-            if (task != null) {
-                task.run();
-                updateLastExecutionTime();
-            }
+	@Override
+	protected void run() {
+		for (;;) {
+			Runnable task = takeTask();
+			if (task != null) {
+				task.run();
+				updateLastExecutionTime();
+			}
 
-            if (confirmShutdown()) {
-                break;
-            }
-        }
-    }
+			if (confirmShutdown()) {
+				break;
+			}
+		}
+	}
 }

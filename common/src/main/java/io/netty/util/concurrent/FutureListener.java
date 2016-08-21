@@ -17,7 +17,9 @@
 package io.netty.util.concurrent;
 
 /**
- * A subtype of {@link GenericFutureListener} that hides type parameter for convenience.
+ * A subtype of {@link GenericFutureListener} that hides type parameter for
+ * convenience.
+ * 
  * <pre>
  * Future f = new DefaultPromise(..);
  * f.addListener(new FutureListener() {
@@ -25,4 +27,5 @@ package io.netty.util.concurrent;
  * });
  * </pre>
  */
-public interface FutureListener<V> extends GenericFutureListener<Future<V>> { }
+public interface FutureListener<V> extends GenericFutureListener<Future<V>> {
+}

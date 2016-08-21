@@ -24,138 +24,132 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
 final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFuture<V> {
-    private static final AtomicLong nextTaskId = new AtomicLong();
-    private static final long START_TIME = System.nanoTime();
+	private static final AtomicLong nextTaskId = new AtomicLong();
+	private static final long START_TIME = System.nanoTime();
 
-    static long nanoTime() {
-        return System.nanoTime() - START_TIME;
-    }
+	static long nanoTime() {
+		return System.nanoTime() - START_TIME;
+	}
 
-    static long deadlineNanos(long delay) {
-        return nanoTime() + delay;
-    }
+	static long deadlineNanos(long delay) {
+		return nanoTime() + delay;
+	}
 
-    private final long id = nextTaskId.getAndIncrement();
-    private final Queue<ScheduledFutureTask<?>> delayedTaskQueue;
-    private long deadlineNanos;
-    /* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
-    private final long periodNanos;
+	private final long id = nextTaskId.getAndIncrement();
+	private final Queue<ScheduledFutureTask<?>> delayedTaskQueue;
+	private long deadlineNanos;
+	/* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
+	private final long periodNanos;
 
-    ScheduledFutureTask(
-            EventExecutor executor, Queue<ScheduledFutureTask<?>> delayedTaskQueue,
-            Runnable runnable, V result, long nanoTime) {
+	ScheduledFutureTask(EventExecutor executor, Queue<ScheduledFutureTask<?>> delayedTaskQueue, Runnable runnable, V result, long nanoTime) {
 
-        this(executor, delayedTaskQueue, toCallable(runnable, result), nanoTime);
-    }
+		this(executor, delayedTaskQueue, toCallable(runnable, result), nanoTime);
+	}
 
-    ScheduledFutureTask(
-            EventExecutor executor, Queue<ScheduledFutureTask<?>> delayedTaskQueue,
-            Callable<V> callable, long nanoTime, long period) {
+	ScheduledFutureTask(EventExecutor executor, Queue<ScheduledFutureTask<?>> delayedTaskQueue, Callable<V> callable, long nanoTime, long period) {
 
-        super(executor, callable);
-        if (period == 0) {
-            throw new IllegalArgumentException("period: 0 (expected: != 0)");
-        }
-        this.delayedTaskQueue = delayedTaskQueue;
-        deadlineNanos = nanoTime;
-        periodNanos = period;
-    }
+		super(executor, callable);
+		if (period == 0) {
+			throw new IllegalArgumentException("period: 0 (expected: != 0)");
+		}
+		this.delayedTaskQueue = delayedTaskQueue;
+		deadlineNanos = nanoTime;
+		periodNanos = period;
+	}
 
-    ScheduledFutureTask(
-            EventExecutor executor, Queue<ScheduledFutureTask<?>> delayedTaskQueue,
-            Callable<V> callable, long nanoTime) {
+	ScheduledFutureTask(EventExecutor executor, Queue<ScheduledFutureTask<?>> delayedTaskQueue, Callable<V> callable, long nanoTime) {
 
-        super(executor, callable);
-        this.delayedTaskQueue = delayedTaskQueue;
-        deadlineNanos = nanoTime;
-        periodNanos = 0;
-    }
+		super(executor, callable);
+		this.delayedTaskQueue = delayedTaskQueue;
+		deadlineNanos = nanoTime;
+		periodNanos = 0;
+	}
 
-    @Override
-    protected EventExecutor executor() {
-        return super.executor();
-    }
+	@Override
+	protected EventExecutor executor() {
+		return super.executor();
+	}
 
-    public long deadlineNanos() {
-        return deadlineNanos;
-    }
+	public long deadlineNanos() {
+		return deadlineNanos;
+	}
 
-    public long delayNanos() {
-        return Math.max(0, deadlineNanos() - nanoTime());
-    }
+	public long delayNanos() {
+		return Math.max(0, deadlineNanos() - nanoTime());
+	}
 
-    public long delayNanos(long currentTimeNanos) {
-        return Math.max(0, deadlineNanos() - (currentTimeNanos - START_TIME));
-    }
+	public long delayNanos(long currentTimeNanos) {
+		return Math.max(0, deadlineNanos() - (currentTimeNanos - START_TIME));
+	}
 
-    @Override
-    public long getDelay(TimeUnit unit) {
-        return unit.convert(delayNanos(), TimeUnit.NANOSECONDS);
-    }
+	@Override
+	public long getDelay(TimeUnit unit) {
+		return unit.convert(delayNanos(), TimeUnit.NANOSECONDS);
+	}
 
-    @Override
-    public int compareTo(Delayed o) {
-        if (this == o) {
-            return 0;
-        }
+	@Override
+	public int compareTo(Delayed o) {
+		if (this == o) {
+			return 0;
+		}
 
-        ScheduledFutureTask<?> that = (ScheduledFutureTask<?>) o;
-        long d = deadlineNanos() - that.deadlineNanos();
-        if (d < 0) {
-            return -1;
-        } else if (d > 0) {
-            return 1;
-        } else if (id < that.id) {
-            return -1;
-        } else if (id == that.id) {
-            throw new Error();
-        } else {
-            return 1;
-        }
-    }
+		ScheduledFutureTask<?> that = (ScheduledFutureTask<?>) o;
+		long d = deadlineNanos() - that.deadlineNanos();
+		if (d < 0) {
+			return -1;
+		} else if (d > 0) {
+			return 1;
+		} else if (id < that.id) {
+			return -1;
+		} else if (id == that.id) {
+			throw new Error();
+		} else {
+			return 1;
+		}
+	}
 
-    @Override
-    public void run() {
-        assert executor().inEventLoop();
-        try {
-            if (periodNanos == 0) {
-                if (setUncancellableInternal()) {
-                    V result = task.call();
-                    setSuccessInternal(result);
-                }
-            } else {
-                // check if is done as it may was cancelled
-                if (!isCancelled()) {
-                    task.call();
-                    if (!executor().isShutdown()) {
-                        long p = periodNanos;
-                        if (p > 0) {
-                            deadlineNanos += p;
-                        } else {
-                            deadlineNanos = nanoTime() - p;
-                        }
-                        if (!isCancelled()) {
-                            delayedTaskQueue.add(this);
-                        }
-                    }
-                }
-            }
-        } catch (Throwable cause) {
-            setFailureInternal(cause);
-        }
-    }
+	@Override
+	public void run() {
+		assert executor().inEventLoop();
+		try {
+			if (periodNanos == 0) {
+				if (setUncancellableInternal()) {
+					V result = task.call();
+					setSuccessInternal(result);
+				}
+			} else {
+				// check if is done as it may was cancelled
+				if (!isCancelled()) {
+					task.call();
+					if (!executor().isShutdown()) {
+						long p = periodNanos;
+						if (p > 0) {
+							deadlineNanos += p;
+						} else {
+							deadlineNanos = nanoTime() - p;
+						}
+						if (!isCancelled()) {
+							delayedTaskQueue.add(this);
+						}
+					}
+				}
+			}
+		} catch (Throwable cause) {
+			setFailureInternal(cause);
+		}
+	}
 
-    @Override
-    protected StringBuilder toStringBuilder() {
-        StringBuilder buf = super.toStringBuilder();
-        buf.setCharAt(buf.length() - 1, ',');
-        buf.append(" id: ");
-        buf.append(id);
-        buf.append(", deadline: ");
-        buf.append(deadlineNanos);
-        buf.append(", period: ");
-        buf.append(periodNanos);
-        buf.append(')');
-        return buf;
-    }
+	@Override
+	protected StringBuilder toStringBuilder() {
+		StringBuilder buf = super.toStringBuilder();
+		buf.setCharAt(buf.length() - 1, ',');
+		buf.append(" id: ");
+		buf.append(id);
+		buf.append(", deadline: ");
+		buf.append(deadlineNanos);
+		buf.append(", period: ");
+		buf.append(periodNanos);
+		buf.append(')');
+		return buf;
+	}
 }

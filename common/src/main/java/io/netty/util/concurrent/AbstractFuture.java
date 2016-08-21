@@ -26,26 +26,26 @@ import java.util.concurrent.TimeoutException;
  */
 public abstract class AbstractFuture<V> implements Future<V> {
 
-    @Override
-    public V get() throws InterruptedException, ExecutionException {
-        await();
+	@Override
+	public V get() throws InterruptedException, ExecutionException {
+		await();
 
-        Throwable cause = cause();
-        if (cause == null) {
-            return getNow();
-        }
-        throw new ExecutionException(cause);
-    }
+		Throwable cause = cause();
+		if (cause == null) {
+			return getNow();
+		}
+		throw new ExecutionException(cause);
+	}
 
-    @Override
-    public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        if (await(timeout, unit)) {
-            Throwable cause = cause();
-            if (cause == null) {
-                return getNow();
-            }
-            throw new ExecutionException(cause);
-        }
-        throw new TimeoutException();
-    }
+	@Override
+	public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+		if (await(timeout, unit)) {
+			Throwable cause = cause();
+			if (cause == null) {
+				return getNow();
+			}
+			throw new ExecutionException(cause);
+		}
+		throw new TimeoutException();
+	}
 }

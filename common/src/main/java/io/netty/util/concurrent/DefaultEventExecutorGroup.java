@@ -18,31 +18,33 @@ package io.netty.util.concurrent;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * Default implementation of {@link MultithreadEventExecutorGroup} which will use {@link DefaultEventExecutor} instances
- * to handle the tasks.
+ * Default implementation of {@link MultithreadEventExecutorGroup} which will
+ * use {@link DefaultEventExecutor} instances to handle the tasks.
  */
 public class DefaultEventExecutorGroup extends MultithreadEventExecutorGroup {
 
-    /**
-     * @see {@link #DefaultEventExecutorGroup(int, ThreadFactory)}
-     */
-    public DefaultEventExecutorGroup(int nThreads) {
-        this(nThreads, null);
-    }
+	/**
+	 * @see {@link #DefaultEventExecutorGroup(int, ThreadFactory)}
+	 */
+	public DefaultEventExecutorGroup(int nThreads) {
+		this(nThreads, null);
+	}
 
-    /**
-     * Create a new instance.
-     *
-     * @param nThreads          the number of threads that will be used by this instance.
-     * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
-     */
-    public DefaultEventExecutorGroup(int nThreads, ThreadFactory threadFactory) {
-        super(nThreads, threadFactory);
-    }
+	/**
+	 * Create a new instance.
+	 *
+	 * @param nThreads
+	 *            the number of threads that will be used by this instance.
+	 * @param threadFactory
+	 *            the ThreadFactory to use, or {@code null} if the default
+	 *            should be used.
+	 */
+	public DefaultEventExecutorGroup(int nThreads, ThreadFactory threadFactory) {
+		super(nThreads, threadFactory);
+	}
 
-    @Override
-    protected EventExecutor newChild(
-            ThreadFactory threadFactory, Object... args) throws Exception {
-        return new DefaultEventExecutor(this, threadFactory);
-    }
+	@Override
+	protected EventExecutor newChild(ThreadFactory threadFactory, Object... args) throws Exception {
+		return new DefaultEventExecutor(this, threadFactory);
+	}
 }

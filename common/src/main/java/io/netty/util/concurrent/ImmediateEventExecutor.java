@@ -21,101 +21,101 @@ import java.util.concurrent.TimeUnit;
  * {@link AbstractEventExecutor} which execute tasks in the callers thread.
  */
 public final class ImmediateEventExecutor extends AbstractEventExecutor {
-    public static final ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
+	public static final ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
 
-    private final Future<?> terminationFuture = new FailedFuture<Object>(
-            GlobalEventExecutor.INSTANCE, new UnsupportedOperationException());
+	private final Future<?> terminationFuture = new FailedFuture<Object>(GlobalEventExecutor.INSTANCE, new UnsupportedOperationException());
 
-    private ImmediateEventExecutor() {
-        // use static instance
-    }
+	private ImmediateEventExecutor() {
+		// use static instance
+	}
 
-    @Override
-    public EventExecutorGroup parent() {
-        return null;
-    }
+	@Override
+	public EventExecutorGroup parent() {
+		return null;
+	}
 
-    @Override
-    public boolean inEventLoop() {
-        return true;
-    }
+	@Override
+	public boolean inEventLoop() {
+		return true;
+	}
 
-    @Override
-    public boolean inEventLoop(Thread thread) {
-        return true;
-    }
+	@Override
+	public boolean inEventLoop(Thread thread) {
+		return true;
+	}
 
-    @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
-        return terminationFuture();
-    }
+	@Override
+	public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+		return terminationFuture();
+	}
 
-    @Override
-    public Future<?> terminationFuture() {
-        return terminationFuture;
-    }
+	@Override
+	public Future<?> terminationFuture() {
+		return terminationFuture;
+	}
 
-    @Override
-    @Deprecated
-    public void shutdown() { }
+	@Override
+	@Deprecated
+	public void shutdown() {
+	}
 
-    @Override
-    public boolean isShuttingDown() {
-        return false;
-    }
+	@Override
+	public boolean isShuttingDown() {
+		return false;
+	}
 
-    @Override
-    public boolean isShutdown() {
-        return false;
-    }
+	@Override
+	public boolean isShutdown() {
+		return false;
+	}
 
-    @Override
-    public boolean isTerminated() {
-        return false;
-    }
+	@Override
+	public boolean isTerminated() {
+		return false;
+	}
 
-    @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit) {
-        return false;
-    }
+	@Override
+	public boolean awaitTermination(long timeout, TimeUnit unit) {
+		return false;
+	}
 
-    @Override
-    public void execute(Runnable command) {
-        if (command == null) {
-            throw new NullPointerException("command");
-        }
-        command.run();
-    }
+	@Override
+	public void execute(Runnable command) {
+		if (command == null) {
+			throw new NullPointerException("command");
+		}
+		command.run();
+	}
 
-    @Override
-    public <V> Promise<V> newPromise() {
-        return new ImmediatePromise<V>(this);
-    }
+	@Override
+	public <V> Promise<V> newPromise() {
+		return new ImmediatePromise<V>(this);
+	}
 
-    @Override
-    public <V> ProgressivePromise<V> newProgressivePromise() {
-        return new ImmediateProgressivePromise<V>(this);
-    }
+	@Override
+	public <V> ProgressivePromise<V> newProgressivePromise() {
+		return new ImmediateProgressivePromise<V>(this);
+	}
 
-    static class ImmediatePromise<V> extends DefaultPromise<V> {
-        ImmediatePromise(EventExecutor executor) {
-            super(executor);
-        }
+	static class ImmediatePromise<V> extends DefaultPromise<V> {
+		ImmediatePromise(EventExecutor executor) {
+			super(executor);
+		}
 
-        @Override
-        protected void checkDeadLock() {
-            // No check
-        }
-    }
+		@Override
+		protected void checkDeadLock() {
+			// No check
+		}
+	}
 
-    static class ImmediateProgressivePromise<V> extends DefaultProgressivePromise<V> {
-        ImmediateProgressivePromise(EventExecutor executor) {
-            super(executor);
-        }
+	static class ImmediateProgressivePromise<V> extends DefaultProgressivePromise<V> {
+		ImmediateProgressivePromise(EventExecutor executor) {
+			super(executor);
+		}
 
-        @Override
-        protected void checkDeadLock() {
-            // No check
-        }
-    }
+		@Override
+		protected void checkDeadLock() {
+			// No check
+		}
+	}
 }
